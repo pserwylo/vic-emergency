@@ -1,4 +1,4 @@
 # Ignore output of scraper
-data.sqlite
+*.sqlite
 .idea
 node_modules
