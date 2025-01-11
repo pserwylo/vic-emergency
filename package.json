@@ -2,8 +2,37 @@
   "version": "0.0.1",
   "main": "scraper.js",
   "dependencies": {
-    "request": "latest",
-    "sqlite3": "latest"
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/geojson": "^7946.0.15",
+    "axios": "^1.7.9",
+    "better-sqlite3": "^11.7.2",
+    "glob": "^11.0.1",
+    "kysely": "^0.27.5",
+    "sqlite3": "latest",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.14.0",
+    "kysely-codegen": "^0.17.0",
+    "kysely-ctl": "^0.10.1",
+    "prettier": "3.4.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.19.1"
+  },
+  "scripts": {
+    "db:codegen": "kysely-codegen --url=data.sqlite --out-file=src/db.types.d.ts",
+    "db:migrate": "kysely migrate:latest --debug",
+    "download:dump-file": "ts-node src/bin/download.ts",
+    "download:summarise-properties": "ts-node src/bin/summarise-properties.ts",
+    "download:import": "ts-node src/bin/import.ts",
+    "download:read-geojson": "ts-node src/bin/read-geojson-from-db.ts",
+    "lint": "eslint --debug .",
+    "lint:fix": "eslint --fix ./src --ext .ts"
   },
   "engines": {
     "node": "16.x"
