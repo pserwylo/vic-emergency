@@ -31,6 +31,7 @@
     "download:summarise-properties": "ts-node src/bin/summarise-properties.ts",
     "download:import": "ts-node src/bin/import.ts",
     "download:read-geojson": "ts-node src/bin/read-geojson-from-db.ts",
+    "download:show-all-timepoints": "ts-node src/bin/show-all-timepoints.ts",
     "lint": "eslint --debug .",
     "lint:fix": "eslint --fix ./src --ext .ts"
   },

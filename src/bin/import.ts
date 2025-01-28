@@ -37,15 +37,31 @@ const run = async () => {
     } else {
       // @ts-ignore
       const updateDate = new Date(geoJson['properties'].lastUpdated)
-      const jobs = geoJson.features.map((f) => {
+
+      // Parallel version, harder to follow the logs. Enable again when stable.
+      /*const jobs = geoJson.features.map((f) => {
         const feature = f as Feature<Geometry, EmergencyVicProperties>
         return upsertFeature(feature, updateDate);
       });
 
-      await Promise.all(jobs);
+      await Promise.all(jobs);*/
+
+      for (let j = 0; j < geoJson.features.length; j ++) {
+        const feature = geoJson.features[j] as Feature<Geometry, EmergencyVicProperties>
+        await upsertFeature(feature, updateDate);
+      }
+
+      /*const jobs = geoJson.features.map((f) => {
+        const feature = f as Feature<Geometry, EmergencyVicProperties>
+        return upsertFeature(feature, updateDate);
+      });
+
+      await Promise.all(jobs);*/
 
       const removedFeatures = await deactivateRemovedFeatures(geoJson.features as Feature<Geometry, EmergencyVicProperties>[], updateDate)
-      logger.info(`Removed features no longer present: ["${removedFeatures.join('", "')}"]`);
+      if (removedFeatures.length > 0) {
+        logger.info(`Removed features no longer present: ["${removedFeatures.join('", "')}"]`);
+      }
     }
   }
 

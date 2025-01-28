@@ -1,5 +1,5 @@
 import {fetchGeoJson} from "../db";
-import {FeatureCollection, Geometry} from "geojson";
+import {createFeatureCollection} from "../create-feature-collection";
 
 const printUsage = () => {
   console.log('Usage: ./read-geojson-from-db.ts [ISO_DATE]');
@@ -26,19 +26,7 @@ const run = async () => {
 
   const geoJson = await fetchGeoJson(date);
 
-  const collection: FeatureCollection = {
-    type: 'FeatureCollection',
-    features: geoJson.map((f) => ({
-      type: 'Feature',
-      id: f.id,
-      properties: {
-        location: f.location,
-      },
-      geometry: JSON.parse(f.geometry) as Geometry,
-    }))
-  }
-
-  console.log(JSON.stringify(collection, null,  "  "));
+  console.log(JSON.stringify(createFeatureCollection(geoJson), null,  "  "));
 
 };
 

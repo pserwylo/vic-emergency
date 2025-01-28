@@ -1,6 +1,6 @@
 import { DB } from './db.types' // this is the Database interface we defined earlier
 import SQLite from 'better-sqlite3'
-import { Kysely, SqliteDialect } from 'kysely'
+import {Kysely, SqliteDialect} from 'kysely'
 import path from 'node:path';
 import {Feature, Geometry} from "geojson";
 import {EmergencyVicProperties} from "./fetch-geojson";
@@ -19,12 +19,29 @@ export const db = new Kysely<DB>({
     dialect,
 })
 
+export const fetchUniqueTimePoints = async ()=> {
+    const createdAtQuery = db.selectFrom('geometry')
+        .select(['created_at as time_point'])
+        .where('created_at', 'is not', null);
+
+    const removedAtQuery = db.selectFrom('geometry')
+        .select(['removed_at as time_point'])
+        .where('removed_at', 'is not', null);
+
+    // @ts-ignore It thinks removed_at is string|null, but there is a "WHERE is not null"
+    const dates = await createdAtQuery.union(removedAtQuery)
+        .distinct()
+        .execute();
+
+    return dates.map((d) => new Date(d.time_point));
+}
+
 export const fetchGeoJson = async (date: Date) => {
     const query = db.selectFrom('feature')
         .innerJoin('geometry', 'feature.id', 'geometry.feature_id')
         .where((eb) =>
             eb.and([
-                eb('feature.created_at', '<', date.toISOString()),
+                eb('feature.created_at', '<=', date.toISOString()),
                 eb.or([
                     eb('feature.removed_at', 'is', null),
                     eb('feature.removed_at', '>', date.toISOString()),
@@ -33,7 +50,7 @@ export const fetchGeoJson = async (date: Date) => {
         )
         .where((eb) =>
             eb.and([
-                eb('geometry.created_at', '<', date.toISOString()),
+                eb('geometry.created_at', '<=', date.toISOString()),
                 eb.or([
                     eb('geometry.removed_at', 'is', null),
                     eb('geometry.removed_at', '>', date.toISOString()),
@@ -51,6 +68,7 @@ export const deactivateRemovedFeatures = async (activeFeatures: Feature<Geometry
             removed_at: updateDate.toISOString(),
         })
         .where('id', 'not in', activeFeatures.map(f => f.properties.id))
+        .where('removed_at', 'is', null)
         .returning('id')
         .execute();
 
@@ -61,6 +79,7 @@ export const deactivateRemovedFeatures = async (activeFeatures: Feature<Geometry
             removed_at: updateDate.toISOString(),
         })
         .where('feature_id', 'in', deactivatedFeatureIds)
+        .where('removed_at', 'is', null)
         .execute();
 
     return deactivatedFeatureIds;
@@ -115,7 +134,7 @@ const insertNewFeature = async (featureGeoJson: Feature<Geometry, EmergencyVicPr
         updated_at: updatedDate.toISOString(),
     }).execute();
 
-    logger.info(`Inserting geometry for new feature ${id}`)
+    logger.debug(`Inserting geometry for new feature ${id}`)
     await insertGeometry(id, updatedDate, featureGeoJson.geometry);
 }
 
