@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        #content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map { flex: 1 }
+
+        .date-wrapper {
+            display: flex;
+            margin: 0 0 1em 0;
+        }
+
+        .date-list {
+            display: flex;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .date-controls {
+            display: flex;
+            list-style: none;
+        }
+
+        .date {
+            margin: 0.2em;
+            width: 1em;
+            height: 1em;
+            display: block;
+            border-radius: 3px;
+            background-color: #f3f3f3;
+            border: solid 2px gray;
+            list-style: none;
+            position: relative;
+        }
+
+        .date a {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .date--active {
+            background-color: red;
+        }
+
+        .date .overlay {
+            display: none;
+            border-left: solid 2px grey;
+            border-bottom: solid 1px grey;
+            padding-left: 0.5em;
+            margin-left: 0.5em;
+            padding-bottom: 0.25em;
+            z-index: 100;
+            background-color: white;
+        }
+
+        .date--active .overlay, .date:hover .overlay {
+            display: block;
+            position: absolute;
+            top: 1.5em;
+            width: 15em;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="content">
+    <div class="date-wrapper">
+        <ul class="date-controls">
+            <li class="date-control date-control--previous">
+                <a href="#">
+                    <img src="./images/fast_rewind.svg" alt="Previous time point" />
+                </a>
+            </li>
+            <li class="date-control date-control--play">
+                <a href="#">
+                    <img src="./images/play.svg" alt="Play animation" />
+                </a>
+            </li>
+            <li class="date-control date-control--pause hidden">
+                <a href="#">
+                    <img src="./images/pause.svg" alt="Pause animation" />
+                </a>
+            </li>
+            <li class="date-control date-control--next">
+                <a href="#">
+                    <img src="./images/fast_forward.svg" alt="Next time point" />
+                </a>
+            </li>
+        </ul>
+        <ul class="date-list"></ul>
+    </div>
+    <div id="map"></div>
+</div>
+
+<script>
+    (async function() {
+
+        const map = L.map('map').setView([-37.840935, 144.946457], 8);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        let geoJsonLayer = null;
+
+        const selectDate = async (date) => {
+            dateIndex = allDates.indexOf(date);
+            const response = await fetch(`http://localhost:3000/api/features/${date.toISOString()}/geojson`);
+            const feature = await response.json();
+            if (geoJsonLayer != null) {
+                map.removeLayer(geoJsonLayer);
+            }
+
+            geoJsonLayer = L.geoJSON(feature);
+            geoJsonLayer.addTo(map);
+
+            document.querySelector('.date--active')?.classList?.remove('date--active');
+            document.querySelector(`.date[data-date="${date.toISOString()}"]`).classList.add('date--active');
+        }
+
+        const initDates = async () => {
+            const response = await fetch('http://localhost:3000/api/features/dates');
+            const json = await response.json();
+            const dates = json.map(d => new Date(d));
+
+            const listItems = dates.map(date => {
+                const li = document.createElement('li');
+                li.className = `date`;
+                li.dataset.date = date.toISOString();
+
+                const a = document.createElement('a');
+                a.href = '#';
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    selectDate(date);
+                    controls.pause();
+                }
+                li.append(a);
+
+                const overlay = document.createElement('div');
+                overlay.innerText = date.toLocaleString();
+                overlay.className = 'overlay';
+                li.append(overlay);
+
+                return li;
+            });
+
+            const dateWrapper = document.querySelector('.date-list');
+            dateWrapper.append(...listItems);
+
+            return dates;
+        }
+
+        const controls = {
+            btns: {
+                previous: document.querySelector('.date-control--previous'),
+                play: document.querySelector('.date-control--play'),
+                pause: document.querySelector('.date-control--pause'),
+                next: document.querySelector('.date-control--next'),
+            },
+            interval: null,
+            play: () => {
+                controls.btns.pause.classList.remove('hidden');
+                controls.btns.play.classList.add('hidden');
+                controls.interval = setInterval(() => {
+                    controls.next();
+                }, 1000);
+            },
+            pause: () => {
+                clearInterval(controls.interval);
+                controls.interval = null;
+                controls.btns.pause.classList.add('hidden');
+                controls.btns.play.classList.remove('hidden');
+            },
+            previous: () => {
+                dateIndex = (dateIndex - 1 + allDates.length) % (allDates.length);
+                selectDate(allDates[dateIndex]);
+            },
+            next: () => {
+                dateIndex = (dateIndex + 1) % (allDates.length);
+                selectDate(allDates[dateIndex]);
+            },
+        };
+
+        controls.btns.previous.querySelector('a').onclick = controls.previous;
+        controls.btns.play.querySelector('a').onclick = controls.play;
+        controls.btns.pause.querySelector('a').onclick = controls.pause;
+        controls.btns.next.querySelector('a').onclick = controls.next;
+
+        controls.play();
+
+        const allDates = await initDates();
+        let dateIndex = 0;
+
+    })();
+</script>
+
+</body>
+</html>
