@@ -19,6 +19,18 @@ export const db = new Kysely<DB>({
     dialect,
 })
 
+export const insertJob = async (hash: string) => {
+    await db.insertInto('import_job').values({
+        hash,
+        created_at: new Date().toISOString(),
+    }).execute();
+}
+
+export const hashExists = async (hash: string) => {
+    const result = await db.selectFrom('import_job').selectAll().where('hash', '=', hash).executeTakeFirst();
+    return result !== undefined;
+}
+
 export const fetchUniqueTimePoints = async ()=> {
     const createdAtQuery = db.selectFrom('geometry')
         .select(['created_at as time_point'])

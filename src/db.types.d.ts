@@ -19,7 +19,13 @@ export interface Geometry {
   removed_at: string | null;
 }
 
+export interface ImportJob {
+  created_at: string;
+  hash: string;
+}
+
 export interface DB {
   feature: Feature;
   geometry: Geometry;
+  import_job: ImportJob;
 }

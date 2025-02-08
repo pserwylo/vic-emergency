@@ -133,7 +133,7 @@
 
         const selectDate = async (date) => {
             dateIndex = allDates.indexOf(date);
-            const response = await fetch(`http://localhost:3000/api/features/${date.toISOString()}/geojson`);
+            const response = await fetch(`/api/features/${date.toISOString()}/geojson`);
             const feature = await response.json();
             if (geoJsonLayer != null) {
                 map.removeLayer(geoJsonLayer);
@@ -147,7 +147,7 @@
         }
 
         const initDates = async () => {
-            const response = await fetch('http://localhost:3000/api/features/dates');
+            const response = await fetch('/api/features/dates');
             const json = await response.json();
             const dates = json.map(d => new Date(d));
 

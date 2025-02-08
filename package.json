@@ -6,6 +6,7 @@
     "@types/geojson": "^7946.0.15",
     "axios": "^1.7.9",
     "better-sqlite3": "^11.7.2",
+    "cron": "^3.5.0",
     "express": "^4.21.2",
     "glob": "^11.0.1",
     "kysely": "^0.27.5",
@@ -28,7 +29,7 @@
   },
   "scripts": {
     "db:codegen": "kysely-codegen --url=data.sqlite --out-file=src/db.types.d.ts",
-    "db:migrate": "kysely migrate:latest --debug",
+    "db:migrate": "kysely migrate:latest",
     "download:dump-file": "ts-node src/bin/download.ts",
     "download:summarise-properties": "ts-node src/bin/summarise-properties.ts",
     "download:import": "ts-node src/bin/import.ts",

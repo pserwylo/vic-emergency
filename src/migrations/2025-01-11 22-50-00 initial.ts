@@ -2,6 +2,12 @@ import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
+        .createTable('import_job')
+        .addColumn('created_at', 'datetime', (col) => col.notNull())
+        .addColumn('hash', 'text', (col) => col.notNull().unique())
+        .execute()
+
+    await db.schema
         .createTable('feature')
         .addColumn('id', 'text', (col) => col.notNull().primaryKey())
         .addColumn('location', 'text')
