@@ -2,15 +2,15 @@
   "version": "0.0.1",
   "main": "scraper.js",
   "dependencies": {
-    "@types/better-sqlite3": "^7.6.12",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/geojson": "^7946.0.15",
-    "axios": "^1.7.9",
-    "better-sqlite3": "^11.7.2",
+    "axios": "1.13.5",
+    "better-sqlite3": "^12.6.2",
     "cron": "^3.5.0",
     "express": "^4.21.2",
-    "glob": "^11.0.1",
+    "glob": "11.1.0",
     "kysely": "^0.27.5",
-    "sqlite3": "latest",
+    "ts-node": "^10.9.2",
     "winston": "^3.17.0"
   },
   "devDependencies": {
@@ -23,7 +23,6 @@
     "kysely-codegen": "^0.17.0",
     "kysely-ctl": "^0.10.1",
     "prettier": "3.4.2",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.19.1"
   },
@@ -40,7 +39,7 @@
     "server:start": "ts-node src/server/app.ts"
   },
   "engines": {
-    "node": "16.x"
+    "node": "24.x"
   },
   "keywords": [
     "scraper",
